@@ -1,7 +1,6 @@
 #pragma once
 
 #include <r_math.h>
-#include <cstdint>
 
 class FrameBuffer {
 
@@ -19,7 +18,7 @@ public:
     uint32_t* colorBuffer;
 
     void update();
-    void setPixel(const math::vec2 pixel, const math::vec3 color);
+    void setPixel(const math::vec2u pixel, const math::vec3 color);
     void clear(const math::vec3 color = math::vec3(0.0f));
 
     void bindBuffer() const;

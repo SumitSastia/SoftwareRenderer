@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 typedef unsigned int uint;
 
@@ -7,6 +8,11 @@ namespace math {
     struct vec2 {
         float x;
         float y;
+    };
+
+    struct vec2u {
+        uint16_t x;
+        uint16_t y;
     };
 
     struct vec3 {

@@ -27,4 +27,4 @@ add_executable(${TARGET_NAME}
 target_include_directories(${TARGET_NAME} PRIVATE include)
 target_include_directories(${TARGET_NAME} PRIVATE include/freetype2)
 
-target_link_libraries(${TARGET_NAME} PRIVATE glfw assimp freetype)
+target_link_libraries(${TARGET_NAME} PRIVATE glfw freetype)

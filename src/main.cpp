@@ -7,9 +7,12 @@ int main() {
 
     GLFWwindow* window = Renderer::instance().getWindow();
 
-    Renderer::instance().frameBuffer->clear(math::vec3(1.0f));
-    Renderer::instance().frameBuffer->update();
+    Renderer::instance().frameBuffer->clear(math::vec3(0.8f));
 
+    for (uint16_t i = 0; i < WIN_W; i++) {
+        Renderer::instance().frameBuffer->setPixel(math::vec2u(i,10), math::vec3(0.0f));
+    }
+    
     bool isRunning = true;
 
     while (!glfwWindowShouldClose(window) && isRunning) {
@@ -22,10 +25,11 @@ int main() {
         // Events
         glfwPollEvents();
 
+        // Updates
+        Renderer::instance().frameBuffer->update();
+
         // Rendering
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        // glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
         Renderer::instance().render();
 
