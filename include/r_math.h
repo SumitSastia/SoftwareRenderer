@@ -1,18 +1,46 @@
 #pragma once
 #include <cstdint>
+#include <iostream>
 
 typedef unsigned int uint;
 
 namespace math {
 
     struct vec2 {
+
         float x;
         float y;
+
+        vec2 operator+(const float scalar) const {
+            return vec2(scalar + x, scalar + y);
+        }
+
+        vec2 operator*(const float scalar) const {
+            return vec2(scalar * x, scalar * y);
+        }
     };
 
     struct vec2u {
+
         uint16_t x;
         uint16_t y;
+
+        vec2u(uint16_t x, uint16_t y):
+            x(x), y(y) {
+        }
+
+        vec2u(const vec2 vec):
+            x(static_cast<uint16_t>(vec.x)),
+            y(static_cast<uint16_t>(vec.y)) {
+        }
+
+        vec2 operator+(const float scalar) const {
+            return vec2(scalar + x, scalar + y);
+        }
+
+        vec2 operator*(const float scalar) const {
+            return vec2(scalar * x, scalar * y);
+        }
     };
 
     struct vec3 {
@@ -53,4 +81,22 @@ namespace math {
     inline vec2 perpendicular(vec2 vec) {
         return vec2(vec.y, -vec.x);
     }
+
+    inline void swap(uint16_t& x, uint16_t& y) {
+        uint16_t temp = x;
+        x = y;
+        y = temp;
+    }
+
+    inline void printVec2(const vec2u vec) {
+        std::cout << "x: " << vec.x << std::endl;
+        std::cout << "y: " << vec.y << std::endl;
+    }
 }
+
+struct Triangle {
+
+    math::vec2 a;
+    math::vec2 b;
+    math::vec2 c;
+};

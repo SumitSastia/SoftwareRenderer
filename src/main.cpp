@@ -7,11 +7,15 @@ int main() {
 
     GLFWwindow* window = Renderer::instance().getWindow();
 
-    Renderer::instance().frameBuffer->clear(math::vec3(0.8f));
+    FrameBuffer& frameBuffer = *Renderer::instance().frameBuffer;
 
-    for (uint16_t i = 0; i < WIN_W; i++) {
-        Renderer::instance().frameBuffer->setPixel(math::vec2u(i,10), math::vec3(0.0f));
+    Renderer::instance().frameBuffer->clear(math::vec3(0.1f));
+
+    for (uint16_t i = 0; i < WIN_W /2; i++) {
+        Renderer::instance().frameBuffer->setPixel(math::vec2u(i,100), math::vec3(1.0f));
     }
+
+    frameBuffer.drawLine(math::vec2(0.0f, 0.0f), math::vec2(1.0f, 1.0f));
     
     bool isRunning = true;
 

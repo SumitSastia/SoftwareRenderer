@@ -22,4 +22,10 @@ public:
     void clear(const math::vec3 color = math::vec3(0.0f));
 
     void bindBuffer() const;
+
+    // Geometry
+    void drawLine(math::vec2 a, math::vec2 b);
+
+    void drawTriangle(const Triangle& triangle);
+    void fillTriangle(const Triangle& triangle);
 };

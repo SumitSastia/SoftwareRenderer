@@ -1,7 +1,5 @@
 #include <frame.h>
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include <renderer.h>
 
 FrameBuffer::FrameBuffer(const uint16_t width, const uint16_t height):
     width(width), height(height)
@@ -46,6 +44,9 @@ uint32_t FrameBuffer::RGB_to_HEX(const math::vec3 color) const {
 
 void FrameBuffer::setPixel(const math::vec2u pixel, const math::vec3 color) {
 
+    if (pixel.x < 0 || pixel.x > WIN_W) return;
+    if (pixel.y < 0 || pixel.y > WIN_H) return;
+
     uint32_t index = pixel.y * width + pixel.x;
     colorBuffer[index] = RGB_to_HEX(color);
 }
@@ -63,4 +64,33 @@ void FrameBuffer::bindBuffer() const {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
+}
+
+void FrameBuffer::drawLine(math::vec2 a, math::vec2 b) {
+
+    // Range conversion: [-1, 1] -> [0, 1]
+    a = a * 0.5f + 0.5f;
+    b = b * 0.5f + 0.5f;
+
+    a.x *= WIN_W;
+    b.x *= WIN_W;
+
+    a.y *= WIN_H;
+    b.y *= WIN_H;
+    
+    float dx = b.x - a.x;
+    float dy = b.y - a.y;
+    
+    float steps = std::max(abs(dx), abs(dy));
+
+    dx /= steps;
+    dy /= steps;
+
+    for (uint16_t i = 0; i < steps; i++) {
+
+        setPixel(math::vec2u(a), math::vec3(0.0f, 0.0f, 1.0f));
+
+        a.x += dx;
+        a.y += dy;
+    }
 }
