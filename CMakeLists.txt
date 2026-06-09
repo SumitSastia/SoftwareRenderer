@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.10)
+set(CMAKE_CXX_STANDARD 20)
+
+set(TARGET_NAME SnowSR)
+set(CMAKE_BUILD_TYPE Debug)
+
+project(${TARGET_NAME})
+
+# set(IMGUI_SRC
+
+#     include/imgui/imgui.cpp
+#     include/imgui/imgui_draw.cpp
+#     include/imgui/imgui_tables.cpp
+#     include/imgui/imgui_widgets.cpp
+#     include/imgui/imgui_impl_glfw.cpp
+#     include/imgui/imgui_impl_opengl3.cpp
+# )
+
+add_executable(${TARGET_NAME}
+
+    src/glad.c
+    src/main.cpp
+    src/renderer.cpp
+    src/frame.cpp
+)
+
+target_include_directories(${TARGET_NAME} PRIVATE include)
+target_include_directories(${TARGET_NAME} PRIVATE include/freetype2)
+
+target_link_libraries(${TARGET_NAME} PRIVATE glfw assimp freetype)
