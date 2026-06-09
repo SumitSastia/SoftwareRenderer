@@ -5,25 +5,49 @@
 
 #include <iostream>
 
+class FrameBuffer;
+
 const unsigned int WIN_W = 1280;
 const unsigned int WIN_H = 720;
+
+class Shader {
+
+    unsigned int shaderProgram;
+  
+public:
+
+    bool init();
+    void use() const;
+    void setInt(const char* target, const int data) const;
+};
 
 class Renderer {
 
     GLFWmonitor* monitor;
     GLFWwindow*  window;
 
+    Shader shader;
+
+    // FinalRender Data
+    unsigned int VAO, VBO;
+    
     int MAX_TEXTURES;
     static bool culling;
-
+    
     Renderer() { 
         
         if (!init()) {
-            std::cerr << "Unable to initialize the Renderer!" << std::endl;
+            std::cerr << "ERROR::Unable to initialize the Renderer!" << std::endl;
+        }
+
+        if (!shader.init()) {
+            std::cerr << "ERROR::Unable to initialize the Shader!" << std::endl;
         }
     }
-
+    
 public:
+
+    FrameBuffer* frameBuffer;
 
     static Renderer& instance() {
         
@@ -31,20 +55,12 @@ public:
         return instance;
     }
 
-    bool init(); /* Returns true if Renderer is successfully initialized. */
-    void render() const {}
+    bool init();
+    void render() const;
     void terminate();
-    
-    // ------------------------------ Global Render Functions ---------------------------- //
 
-    static void enableCulling();
-    static void disableCulling();
-    static bool getCullingState() { return culling; }
-
-    static void enableDepth();
-    static void disableDepth();
-
-    static void clear();
+    // Triggers the instance
+    void trigger() {}
 
     GLFWwindow* getWindow() const { return window; }
 

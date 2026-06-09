@@ -40,11 +40,11 @@ namespace math {
         vec3 matrix[4];
     };
 
-    float dot(vec2 a, vec2 b) {
+    inline float dot(vec2 a, vec2 b) {
         return a.x * b.x + a.y * b.y;
     }
 
-    vec2 perpendicular(vec2 vec) {
+    inline vec2 perpendicular(vec2 vec) {
         return vec2(vec.y, -vec.x);
     }
 }

@@ -6,12 +6,21 @@
 FrameBuffer::FrameBuffer(const uint16_t width, const uint16_t height):
     width(width), height(height)
 {
-    colorBuffer = new uint32_t[width * height];
+    colorBuffer = new uint32_t[width * height]();
+
+    for (uint32_t i = 0; i < width*height; i++) {
+        colorBuffer[i] = 0xFF0000FF;
+    }
 
     glGenTextures(1, &screenTexture);
     glBindTexture(GL_TEXTURE_2D, screenTexture);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colorBuffer);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, colorBuffer);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void FrameBuffer::update() {
@@ -45,4 +54,10 @@ void FrameBuffer::clear(const math::vec3 color) {
     for (uint32_t i = 0; i < totalPixels; i++) {
         colorBuffer[i] = RGB_to_HEX(color);
     }
-} 
+}
+
+void FrameBuffer::bindBuffer() const {
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, screenTexture);
+}
