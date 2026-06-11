@@ -19,9 +19,12 @@ project(${TARGET_NAME})
 add_executable(${TARGET_NAME}
 
     src/glad.c
+    src/r_math.cpp
     src/main.cpp
     src/renderer.cpp
     src/frame.cpp
+    src/input.cpp
+    src/camera.cpp
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE include)

@@ -1,5 +1,6 @@
 #include <frame.h>
 #include <renderer.h>
+#include <camera.h>
 
 FrameBuffer::FrameBuffer(const uint16_t width, const uint16_t height):
     width(width), height(height)
@@ -31,7 +32,7 @@ void FrameBuffer::update() {
 
 #include <iostream>
 
-uint32_t FrameBuffer::RGB_to_HEX(const math::vec3 color) const {
+uint32_t FrameBuffer::RGB_to_HEX(const glm::vec3 color) const {
 
     uint8_t r = static_cast<uint8_t>(color.r * 255.0f);
     uint8_t g = static_cast<uint8_t>(color.g * 255.0f);
@@ -44,30 +45,21 @@ uint32_t FrameBuffer::RGB_to_HEX(const math::vec3 color) const {
     return hex;
 }
 
-void FrameBuffer::setPixel(const math::vec2u pixel, const math::vec3 color) {
-
-    if (pixel.x < 0 || pixel.x > WIN_W) return;
-    if (pixel.y < 0 || pixel.y > WIN_H) return;
-
-    uint32_t index = pixel.y * width + pixel.x;
-    colorBuffer[index] = RGB_to_HEX(color);
-}
-
-void FrameBuffer::setPixel(const u_int16_t x, const uint16_t y, const math::vec3 color) {
+void FrameBuffer::setPixel(const float x, const float y, const glm::vec3 color) {
 
     if (x < 0 || x > WIN_W) return;
     if (y < 0 || y > WIN_H) return;
 
-    uint32_t index = y * width + x;
+    uint32_t index = static_cast<uint16_t>(y) * width + static_cast<uint16_t>(x);
     colorBuffer[index] = RGB_to_HEX(color);
 }
 
-bool FrameBuffer::setDepth(const math::vec2u pixel, const float depth) {
+bool FrameBuffer::setDepth(const float x, const float y, const float depth) {
 
-    if (pixel.x < 0 || pixel.x > WIN_W) return false;
-    if (pixel.y < 0 || pixel.y > WIN_H) return false;
+    if (x < 0 || x > WIN_W) return false;
+    if (y < 0 || y > WIN_H) return false;
 
-    uint32_t index = pixel.y * width + pixel.x;
+    uint32_t index = static_cast<uint16_t>(y) * width + static_cast<uint16_t>(x);
     
     if (depth < depthBuffer[index]) {
         depthBuffer[index] = depth;
@@ -77,12 +69,13 @@ bool FrameBuffer::setDepth(const math::vec2u pixel, const float depth) {
     return false;
 }
 
-void FrameBuffer::clear(const math::vec3 color) {
+void FrameBuffer::clear(const glm::vec3 color) {
 
     uint32_t totalPixels = width * height;
 
     for (uint32_t i = 0; i < totalPixels; i++) {
         colorBuffer[i] = RGB_to_HEX(color);
+        depthBuffer[i] = 1.0f;
     }
 }
 
@@ -92,7 +85,7 @@ void FrameBuffer::bindBuffer() const {
     glBindTexture(GL_TEXTURE_2D, screenTexture);
 }
 
-void FrameBuffer::drawLine(math::vec2 a, math::vec2 b, const math::vec3 color) {
+void FrameBuffer::drawLine(glm::vec2 a, glm::vec2 b, const glm::vec3 color) {
 
     // Range conversion: [-1, 1] -> [0, 1]
     a = a * 0.5f + 0.5f;
@@ -114,49 +107,50 @@ void FrameBuffer::drawLine(math::vec2 a, math::vec2 b, const math::vec3 color) {
 
     for (uint16_t i = 0; i < steps; i++) {
 
-        setPixel(math::vec2u(a), color);
+        setPixel(a.x, a.y, color);
 
         a.x += dx;
         a.y += dy;
     }
 }
 
-void FrameBuffer::drawTriangle(const Triangle& triangle) {
+void FrameBuffer::drawTriangle(const Triangle2D& triangle, const glm::vec3& color) {
 
-    drawLine(triangle.a, triangle.b, triangle.color);
-    drawLine(triangle.b, triangle.c, triangle.color);
-    drawLine(triangle.c, triangle.a, triangle.color);
+    drawLine(triangle.v0, triangle.v1, color);
+    drawLine(triangle.v1, triangle.v2, color);
+    drawLine(triangle.v2, triangle.v0, color);
 }
 
-math::vec2 math::vec2::convertRange() const {
+glm::vec2 convertRange(const glm::vec2& vec) {
 
-    math::vec2 vec;
-    vec.x = (x * 0.5 + 0.5) * WIN_W;
-    vec.y = (y * 0.5 + 0.5) * WIN_H;
+    glm::vec2 new_vec;
 
-    return vec;
+    new_vec.x = (vec.x * 0.5 + 0.5) * WIN_W;
+    new_vec.y = (vec.y * 0.5 + 0.5) * WIN_H;
+
+    return new_vec;
 }
 
-math::vec3 math::vec3::convertRange() const {
+glm::vec3 convertRange(const glm::vec3& vec) {
 
-    math::vec3 vec;
+    glm::vec3 new_vec;
 
-    vec.x = (x * 0.5 + 0.5) * WIN_W;
-    vec.y = (y * 0.5 + 0.5) * WIN_H;
-    vec.z = z;
+    new_vec.x = (vec.x * 0.5 + 0.5) * WIN_W;
+    new_vec.y = (vec.y * 0.5 + 0.5) * WIN_H;
+    new_vec.z = vec.z;
 
-    return vec;
+    return new_vec;
 }
 
-float FrameBuffer::checkEdge(const math::vec2& a, const math::vec2& b, const math::vec2& pixel) {
+float FrameBuffer::checkEdge(const glm::vec2& a, const glm::vec2& b, const glm::vec2& pixel) {
     return (pixel.x - a.x) * (b.y - a.y) - (pixel.y - a.y) * (b.x - a.x);
 }
 
-void FrameBuffer::fillTriangle(const Triangle& triangle) {
+void FrameBuffer::fillTriangle(const Triangle2D& triangle, const glm::vec3& color) {
 
-    math::vec2 v0 = triangle.a;
-    math::vec2 v1 = triangle.b;
-    math::vec2 v2 = triangle.c;
+    glm::vec2 v0 = triangle.v0;
+    glm::vec2 v1 = triangle.v1;
+    glm::vec2 v2 = triangle.v2;
 
     // Bounding Box
     float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
@@ -165,34 +159,36 @@ void FrameBuffer::fillTriangle(const Triangle& triangle) {
     float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
     float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
 
-    v0 = v0.convertRange();
-    v1 = v1.convertRange();
-    v2 = v2.convertRange();
+    v0 = convertRange(v0);
+    v1 = convertRange(v1);
+    v2 = convertRange(v2);
 
     for (float i = minX; i <= maxX; i++) {
         for (float j = minY; j <= maxY; j++) {
 
-            const math::vec2 pixel(i, j);
+            const glm::vec2 pixel(i, j);
 
             if (
                 (checkEdge(v0, v1, pixel) >= 0 &&
-                checkEdge(v1, v2, pixel) >= 0 &&
-                checkEdge(v2, v0, pixel) >= 0) ||
+                 checkEdge(v1, v2, pixel) >= 0 &&
+                 checkEdge(v2, v0, pixel) >= 0) ||
                 (checkEdge(v0, v1, pixel) <= 0 &&
-                checkEdge(v1, v2, pixel) <= 0 &&
-                checkEdge(v2, v0, pixel) <= 0)
+                 checkEdge(v1, v2, pixel) <= 0 &&
+                 checkEdge(v2, v0, pixel) <= 0)
             ) {
-                setPixel(pixel, triangle.color);
+                setPixel(i, j, color);
             }
         }
     }
 }
 
-void FrameBuffer::gradientTriangle(const Triangle& triangle) {
+void FrameBuffer::gradientTriangle(const Triangle2D& triangle, const glm::vec3& color) {
 
-    math::vec2 v0 = triangle.a;
-    math::vec2 v1 = triangle.b;
-    math::vec2 v2 = triangle.c;
+    Triangle2D tri = triangle.transform();
+
+    glm::vec2 v0 = tri.v0;
+    glm::vec2 v1 = tri.v1;
+    glm::vec2 v2 = tri.v2;
 
     // Bounding Box
     float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
@@ -201,22 +197,22 @@ void FrameBuffer::gradientTriangle(const Triangle& triangle) {
     float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
     float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
 
-    v0 = v0.convertRange();
-    v1 = v1.convertRange();
-    v2 = v2.convertRange();
+    v0 = convertRange(v0);
+    v1 = convertRange(v1);
+    v2 = convertRange(v2);
 
     for (float i = minX; i <= maxX; i++) {
         for (float j = minY; j <= maxY; j++) {
 
-            const math::vec2 pixel(i, j);
+            const glm::vec2 pixel(i, j);
 
             if (
-                (checkEdge(v0, v1, pixel) >= 0 &&
-                checkEdge(v1, v2, pixel) >= 0 &&
-                checkEdge(v2, v0, pixel) >= 0) ||
-                (checkEdge(v0, v1, pixel) <= 0 &&
-                checkEdge(v1, v2, pixel) <= 0 &&
-                checkEdge(v2, v0, pixel) <= 0)
+                (checkEdge(v0, v1, pixel) >= 0  &&
+                 checkEdge(v1, v2, pixel) >= 0  &&
+                 checkEdge(v2, v0, pixel) >= 0) ||
+                (checkEdge(v0, v1, pixel) <= 0  &&
+                 checkEdge(v1, v2, pixel) <= 0  &&
+                 checkEdge(v2, v0, pixel) <= 0)
             ) {
                 // Gradient Triangle
                 float area = checkEdge(v0, v1, v2);
@@ -225,23 +221,23 @@ void FrameBuffer::gradientTriangle(const Triangle& triangle) {
                 float beta  = checkEdge(v2, v0, pixel) / area;
                 float gamma = checkEdge(v0, v1, pixel) / area;
 
-                math::vec3 color {
-                    alpha * triangle.color.r,
-                    beta  * triangle.color.g,
-                    gamma * triangle.color.b
+                glm::vec3 new_color {
+                    alpha * color.r,
+                    beta  * color.g,
+                    gamma * color.b
                 };
 
-                setPixel(pixel, color);
+                setPixel(i, j, new_color);
             }
         }
     }
 }
 
-void FrameBuffer::draw(const Triangle3D& triangle, const math::vec3 color) {
+void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
 
-    math::vec3 v0 = triangle.v0;
-    math::vec3 v1 = triangle.v1;
-    math::vec3 v2 = triangle.v2;
+    glm::vec2 v0 = triangle.v0;
+    glm::vec2 v1 = triangle.v1;
+    glm::vec2 v2 = triangle.v2;
 
     // Bounding Box
     float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
@@ -250,45 +246,45 @@ void FrameBuffer::draw(const Triangle3D& triangle, const math::vec3 color) {
     float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
     float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
 
-    v0 = v0.convertRange();
-    v1 = v1.convertRange();
-    v2 = v2.convertRange();
+    v0 = convertRange(v0);
+    v1 = convertRange(v1);
+    v2 = convertRange(v2);
 
     for (float i = minX; i <= maxX; i++) {
         for (float j = minY; j <= maxY; j++) {
 
-            const math::vec2 pixel(i, j);
+            const glm::vec2 pixel(i, j);
 
             if (
-                (checkEdge(v0.vec2(), v1.vec2(), pixel) >= 0 &&
-                 checkEdge(v1.vec2(), v2.vec2(), pixel) >= 0 &&
-                 checkEdge(v2.vec2(), v0.vec2(), pixel) >= 0) ||
-                (checkEdge(v0.vec2(), v1.vec2(), pixel) <= 0 &&
-                 checkEdge(v1.vec2(), v2.vec2(), pixel) <= 0 &&
-                 checkEdge(v2.vec2(), v0.vec2(), pixel) <= 0)
+                (checkEdge(v0, v1, pixel) >= 0  &&
+                 checkEdge(v1, v2, pixel) >= 0  &&
+                 checkEdge(v2, v0, pixel) >= 0) ||
+                (checkEdge(v0, v1, pixel) <= 0  &&
+                 checkEdge(v1, v2, pixel) <= 0  &&
+                 checkEdge(v2, v0, pixel) <= 0)
             ) {
                 // Gradient Triangle
-                float area = checkEdge(v0.vec2(), v1.vec2(), v2.vec2());
+                float area = checkEdge(v0, v1, v2);
 
-                float alpha = checkEdge(v1.vec2(), v2.vec2(), pixel) / area;
-                float beta  = checkEdge(v2.vec2(), v0.vec2(), pixel) / area;
-                float gamma = checkEdge(v0.vec2(), v1.vec2(), pixel) / area;
+                float alpha = checkEdge(v1, v2, pixel) / area;
+                float beta  = checkEdge(v2, v0, pixel) / area;
+                float gamma = checkEdge(v0, v1, pixel) / area;
 
-                math::vec3 new_color {
+                glm::vec3 new_color {
                     alpha * color.r,
                     beta  * color.g,
                     gamma * color.b
                 };
 
                 float depth = {
-                    alpha * v0.z +
-                    beta  * v1.z +
-                    gamma * v2.z 
+                    alpha * triangle.v0.z +
+                    beta  * triangle.v1.z +
+                    gamma * triangle.v2.z 
                 };
 
-                // setPixel(pixel, new_color);
-                if (setDepth(pixel, depth)) {
-                    setPixel(pixel, math::vec3(1.0f - depth));
+                if (setDepth(i, j, depth)) {
+                    // setPixel(pixel, math::vec3(1.0f - depth));
+                    setPixel(i, j, new_color);
                 }
             }
         }

@@ -9,8 +9,10 @@ class FrameBuffer {
 
     uint screenTexture;
 
-    uint32_t RGB_to_HEX(const math::vec3 color) const;
-    float checkEdge(const math::vec2& a, const math::vec2& b, const math::vec2& pixel);
+    // uint32_t RGB_to_HEX(const math::vec3 color) const;
+    // float checkEdge(const math::vec2& a, const math::vec2& b, const math::vec2& pixel);
+    uint32_t RGB_to_HEX(const glm::vec3 color) const;
+    float checkEdge(const glm::vec2& a, const glm::vec2& b, const glm::vec2& pixel);
     
 public:
     
@@ -21,22 +23,29 @@ public:
 
     void update();
 
-    void setPixel(const math::vec2u pixel, const math::vec3 color);
-    void setPixel(const u_int16_t x, const uint16_t y, const math::vec3 color);
+    // void setPixel(const u_int16_t x, const uint16_t y, const glm::vec3 color);
+    // bool setDepth(const u_int16_t x, const uint16_t y, const float depth);
 
-    bool setDepth(const math::vec2u pixel, const float depth);
+    void setPixel(const float x, const float y, const glm::vec3 color);
+    bool setDepth(const float x, const float y, const float depth);
 
-    void clear(const math::vec3 color = math::vec3(0.0f));
+    void clear(const glm::vec3 color = glm::vec3(0.0f));
 
     void bindBuffer() const;
 
     // Geometry
-    void drawLine(math::vec2 a, math::vec2 b, const math::vec3 color);
+    void drawLine(glm::vec2 a, glm::vec2 b, const glm::vec3 color);
 
-    void drawTriangle(const Triangle& triangle);
-    void fillTriangle(const Triangle& triangle);
-    void gradientTriangle(const Triangle& triangle);
+    // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
+    void drawTriangle(const Triangle2D& triangle, const glm::vec3& color);
+
+    // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
+    void fillTriangle(const Triangle2D& triangle, const glm::vec3& color);
+
+    // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
+    void gradientTriangle(const Triangle2D& triangle, const glm::vec3& color);
 
     // 3D Geometry
-    void draw(const Triangle3D& triangle, const math::vec3 color);
+    // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
+    void draw(const Triangle& triangle, const glm::vec3 color);
 };

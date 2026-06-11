@@ -4,6 +4,9 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <vector>
+
+#include <r_math.h>
 
 class FrameBuffer;
 
@@ -34,7 +37,7 @@ class Renderer {
     int MAX_TEXTURES;
     static bool culling;
     
-    Renderer() { 
+    Renderer() {
         
         if (!init()) {
             std::cerr << "ERROR::Unable to initialize the Renderer!" << std::endl;
@@ -48,6 +51,7 @@ class Renderer {
 public:
 
     FrameBuffer* frameBuffer;
+    std::vector <Triangle> renderQueue;
 
     static Renderer& instance() {
         
