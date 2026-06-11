@@ -11,6 +11,8 @@ namespace math {
         float x;
         float y;
 
+        math::vec2 convertRange() const;
+
         vec2 operator+(const float scalar) const {
             return vec2(scalar + x, scalar + y);
         }
@@ -99,4 +101,5 @@ struct Triangle {
     math::vec2 a;
     math::vec2 b;
     math::vec2 c;
+    math::vec3 color;
 };

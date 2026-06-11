@@ -51,6 +51,15 @@ void FrameBuffer::setPixel(const math::vec2u pixel, const math::vec3 color) {
     colorBuffer[index] = RGB_to_HEX(color);
 }
 
+void FrameBuffer::setPixel(const u_int16_t x, const uint16_t y, const math::vec3 color) {
+
+    if (x < 0 || x > WIN_W) return;
+    if (y < 0 || y > WIN_H) return;
+
+    uint32_t index = y * width + x;
+    colorBuffer[index] = RGB_to_HEX(color);
+}
+
 void FrameBuffer::clear(const math::vec3 color) {
 
     uint32_t totalPixels = width * height;
@@ -66,7 +75,7 @@ void FrameBuffer::bindBuffer() const {
     glBindTexture(GL_TEXTURE_2D, screenTexture);
 }
 
-void FrameBuffer::drawLine(math::vec2 a, math::vec2 b) {
+void FrameBuffer::drawLine(math::vec2 a, math::vec2 b, const math::vec3 color) {
 
     // Range conversion: [-1, 1] -> [0, 1]
     a = a * 0.5f + 0.5f;
@@ -88,9 +97,65 @@ void FrameBuffer::drawLine(math::vec2 a, math::vec2 b) {
 
     for (uint16_t i = 0; i < steps; i++) {
 
-        setPixel(math::vec2u(a), math::vec3(0.0f, 0.0f, 1.0f));
+        setPixel(math::vec2u(a), color);
 
         a.x += dx;
         a.y += dy;
+    }
+}
+
+void FrameBuffer::drawTriangle(const Triangle& triangle) {
+
+    drawLine(triangle.a, triangle.b, triangle.color);
+    drawLine(triangle.b, triangle.c, triangle.color);
+    drawLine(triangle.c, triangle.a, triangle.color);
+}
+
+math::vec2 math::vec2::convertRange() const {
+
+    math::vec2 vec;
+    vec.x = (x * 0.5 + 0.5) * WIN_W;
+    vec.y = (y * 0.5 + 0.5) * WIN_H;
+
+    return vec;
+}
+
+float FrameBuffer::checkEdge(const math::vec2& a, const math::vec2& b, const math::vec2& pixel) {
+    return (pixel.x - a.x) * (b.y - a.y) - (pixel.y - a.y) * (b.x - a.x);
+}
+
+void FrameBuffer::fillTriangle(const Triangle& triangle) {
+
+    math::vec2 v0 = triangle.a;
+    math::vec2 v1 = triangle.b;
+    math::vec2 v2 = triangle.c;
+
+    // Bounding Box
+    float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+    float maxX = (std::max(std::max(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+
+    float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+    float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+
+    v0 = v0.convertRange();
+    v1 = v1.convertRange();
+    v2 = v2.convertRange();
+
+    for (float i = minX; i <= maxX; i++) {
+        for (float j = minY; j <= maxY; j++) {
+
+            const math::vec2 pixel(i, j);
+
+            if (
+                (checkEdge(v0, v1, pixel) >= 0 &&
+                checkEdge(v1, v2, pixel) >= 0 &&
+                checkEdge(v2, v0, pixel) >= 0) ||
+                (checkEdge(v0, v1, pixel) <= 0 &&
+                checkEdge(v1, v2, pixel) <= 0 &&
+                checkEdge(v2, v0, pixel) <= 0)
+            ) {
+                setPixel(pixel, triangle.color);
+            }
+        }
     }
 }
