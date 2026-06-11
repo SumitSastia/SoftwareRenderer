@@ -10,6 +10,7 @@ int main() {
     // Initialization
 
     GLFWwindow* window = Renderer::instance().getWindow();
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     Input::init();
     glfwSetKeyCallback(window, Input::key_callback);
@@ -72,11 +73,17 @@ int main() {
         glm::vec2( 3.0f,-1.0f)
     };
 
+    Triangle t3 {
+        glm::vec4( 0.0f, 2.0f, 0.0f, 1.0f),
+        glm::vec4(-1.0f,-1.0f, 0.0f, 1.0f),
+        glm::vec4( 3.0f,-1.0f, 0.0f, 1.0f)
+    };
+
     // t1.transform();
     // t2.transform();
 
-    frameBuffer.gradientTriangle(t1, glm::vec3(1.0f));
-    frameBuffer.gradientTriangle(t2, glm::vec3(1.0f));
+    // frameBuffer.gradientTriangle(t1, glm::vec3(1.0f));
+    // frameBuffer.gradientTriangle(t2, glm::vec3(1.0f));
     
     bool isRunning = true;
     float deltaTime, currentTime = 0.0f, lastTime = 0.0f;
@@ -109,7 +116,8 @@ int main() {
 
         frameBuffer.clear();
 
-        frameBuffer.gradientTriangle(t2, glm::vec3(1.0f));
+        // frameBuffer.gradientTriangle(t2, glm::vec3(1.0f));
+        frameBuffer.draw(t3, glm::vec3(1.0f));
 
         Renderer::instance().render();
 

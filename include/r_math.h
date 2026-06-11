@@ -18,7 +18,9 @@ struct Triangle2D {
 
 struct Triangle {
 
-    glm::vec3 v0;
-    glm::vec3 v1;
-    glm::vec3 v2;
+    glm::vec4 v0;
+    glm::vec4 v1;
+    glm::vec4 v2;
+
+    Triangle transform() const;
 };

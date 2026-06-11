@@ -197,6 +197,12 @@ void FrameBuffer::gradientTriangle(const Triangle2D& triangle, const glm::vec3& 
     float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
     float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
 
+    if (minX < 0.0f) minX = 0.0f;
+    if (minY < 0.0f) minY = 0.0f;
+
+    if (maxX > WIN_W) maxX = WIN_W;
+    if (maxY > WIN_H) maxY = WIN_H;
+
     v0 = convertRange(v0);
     v1 = convertRange(v1);
     v2 = convertRange(v2);
@@ -235,9 +241,17 @@ void FrameBuffer::gradientTriangle(const Triangle2D& triangle, const glm::vec3& 
 
 void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
 
-    glm::vec2 v0 = triangle.v0;
-    glm::vec2 v1 = triangle.v1;
-    glm::vec2 v2 = triangle.v2;
+    const Triangle tri = triangle.transform();
+
+    if (
+        tri.v0.w <=0 ||
+        tri.v1.w <=0 ||
+        tri.v2.w <=0
+    ) return;
+
+    glm::vec3 v0 = tri.v0;
+    glm::vec3 v1 = tri.v1;
+    glm::vec3 v2 = tri.v2;
 
     // Bounding Box
     float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
@@ -245,6 +259,12 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
 
     float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
     float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+
+    if (minX < 0.0f) minX = 0.0f;
+    if (minY < 0.0f) minY = 0.0f;
+
+    if (maxX > WIN_W) maxX = WIN_W;
+    if (maxY > WIN_H) maxY = WIN_H;
 
     v0 = convertRange(v0);
     v1 = convertRange(v1);
