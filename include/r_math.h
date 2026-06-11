@@ -52,6 +52,8 @@ namespace math {
             struct { float r,g,b; };
         };
 
+        vec3(): x(0), y(0) {}
+
         vec3(float n):
             x(n), y(n), z(n) {
         }
@@ -59,6 +61,9 @@ namespace math {
         vec3(float x, float y , float z):
             x(x), y(y), z(z) {
         }
+
+        math::vec3 convertRange() const;
+        math::vec2 vec2() const { return math::vec2(x,y); }
     };
 
     struct vec4 {
@@ -102,4 +107,24 @@ struct Triangle {
     math::vec2 b;
     math::vec2 c;
     math::vec3 color;
+};
+
+struct Triangle3D {
+
+    math::vec3 v0;
+    math::vec3 v1;
+    math::vec3 v2;
+};
+
+struct Vertex {
+
+    math::vec2 pixel;
+    math::vec3 color;
+};
+
+struct ColoredTri {
+
+    Vertex v0;
+    Vertex v1;
+    Vertex v2;
 };

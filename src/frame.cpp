@@ -4,10 +4,12 @@
 FrameBuffer::FrameBuffer(const uint16_t width, const uint16_t height):
     width(width), height(height)
 {
-    colorBuffer = new uint32_t[width * height]();
+    colorBuffer = new uint32_t[width * height];
+    depthBuffer = new float[width * height];
 
-    for (uint32_t i = 0; i < width*height; i++) {
+    for (uint32_t i = 0; i < width * height; i++) {
         colorBuffer[i] = 0xFF0000FF;
+        depthBuffer[i] = 1.0f;
     }
 
     glGenTextures(1, &screenTexture);
@@ -58,6 +60,21 @@ void FrameBuffer::setPixel(const u_int16_t x, const uint16_t y, const math::vec3
 
     uint32_t index = y * width + x;
     colorBuffer[index] = RGB_to_HEX(color);
+}
+
+bool FrameBuffer::setDepth(const math::vec2u pixel, const float depth) {
+
+    if (pixel.x < 0 || pixel.x > WIN_W) return false;
+    if (pixel.y < 0 || pixel.y > WIN_H) return false;
+
+    uint32_t index = pixel.y * width + pixel.x;
+    
+    if (depth < depthBuffer[index]) {
+        depthBuffer[index] = depth;
+        return true;
+    }
+
+    return false;
 }
 
 void FrameBuffer::clear(const math::vec3 color) {
@@ -120,6 +137,17 @@ math::vec2 math::vec2::convertRange() const {
     return vec;
 }
 
+math::vec3 math::vec3::convertRange() const {
+
+    math::vec3 vec;
+
+    vec.x = (x * 0.5 + 0.5) * WIN_W;
+    vec.y = (y * 0.5 + 0.5) * WIN_H;
+    vec.z = z;
+
+    return vec;
+}
+
 float FrameBuffer::checkEdge(const math::vec2& a, const math::vec2& b, const math::vec2& pixel) {
     return (pixel.x - a.x) * (b.y - a.y) - (pixel.y - a.y) * (b.x - a.x);
 }
@@ -155,6 +183,113 @@ void FrameBuffer::fillTriangle(const Triangle& triangle) {
                 checkEdge(v2, v0, pixel) <= 0)
             ) {
                 setPixel(pixel, triangle.color);
+            }
+        }
+    }
+}
+
+void FrameBuffer::gradientTriangle(const Triangle& triangle) {
+
+    math::vec2 v0 = triangle.a;
+    math::vec2 v1 = triangle.b;
+    math::vec2 v2 = triangle.c;
+
+    // Bounding Box
+    float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+    float maxX = (std::max(std::max(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+
+    float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+    float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+
+    v0 = v0.convertRange();
+    v1 = v1.convertRange();
+    v2 = v2.convertRange();
+
+    for (float i = minX; i <= maxX; i++) {
+        for (float j = minY; j <= maxY; j++) {
+
+            const math::vec2 pixel(i, j);
+
+            if (
+                (checkEdge(v0, v1, pixel) >= 0 &&
+                checkEdge(v1, v2, pixel) >= 0 &&
+                checkEdge(v2, v0, pixel) >= 0) ||
+                (checkEdge(v0, v1, pixel) <= 0 &&
+                checkEdge(v1, v2, pixel) <= 0 &&
+                checkEdge(v2, v0, pixel) <= 0)
+            ) {
+                // Gradient Triangle
+                float area = checkEdge(v0, v1, v2);
+
+                float alpha = checkEdge(v1, v2, pixel) / area;
+                float beta  = checkEdge(v2, v0, pixel) / area;
+                float gamma = checkEdge(v0, v1, pixel) / area;
+
+                math::vec3 color {
+                    alpha * triangle.color.r,
+                    beta  * triangle.color.g,
+                    gamma * triangle.color.b
+                };
+
+                setPixel(pixel, color);
+            }
+        }
+    }
+}
+
+void FrameBuffer::draw(const Triangle3D& triangle, const math::vec3 color) {
+
+    math::vec3 v0 = triangle.v0;
+    math::vec3 v1 = triangle.v1;
+    math::vec3 v2 = triangle.v2;
+
+    // Bounding Box
+    float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+    float maxX = (std::max(std::max(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+
+    float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+    float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+
+    v0 = v0.convertRange();
+    v1 = v1.convertRange();
+    v2 = v2.convertRange();
+
+    for (float i = minX; i <= maxX; i++) {
+        for (float j = minY; j <= maxY; j++) {
+
+            const math::vec2 pixel(i, j);
+
+            if (
+                (checkEdge(v0.vec2(), v1.vec2(), pixel) >= 0 &&
+                 checkEdge(v1.vec2(), v2.vec2(), pixel) >= 0 &&
+                 checkEdge(v2.vec2(), v0.vec2(), pixel) >= 0) ||
+                (checkEdge(v0.vec2(), v1.vec2(), pixel) <= 0 &&
+                 checkEdge(v1.vec2(), v2.vec2(), pixel) <= 0 &&
+                 checkEdge(v2.vec2(), v0.vec2(), pixel) <= 0)
+            ) {
+                // Gradient Triangle
+                float area = checkEdge(v0.vec2(), v1.vec2(), v2.vec2());
+
+                float alpha = checkEdge(v1.vec2(), v2.vec2(), pixel) / area;
+                float beta  = checkEdge(v2.vec2(), v0.vec2(), pixel) / area;
+                float gamma = checkEdge(v0.vec2(), v1.vec2(), pixel) / area;
+
+                math::vec3 new_color {
+                    alpha * color.r,
+                    beta  * color.g,
+                    gamma * color.b
+                };
+
+                float depth = {
+                    alpha * v0.z +
+                    beta  * v1.z +
+                    gamma * v2.z 
+                };
+
+                // setPixel(pixel, new_color);
+                if (setDepth(pixel, depth)) {
+                    setPixel(pixel, math::vec3(1.0f - depth));
+                }
             }
         }
     }
