@@ -122,7 +122,8 @@ int main() {
 
         frameBuffer.clear();
         frameBuffer.draw(Shapes::instance().square, squareModel, glm::vec3(1.0f));
-        frameBuffer.draw(Shapes::instance().cube,   cubeModel, glm::vec3(1.0f, 0.5f, 0.8f));
+        // frameBuffer.draw(Shapes::instance().cube,   cubeModel, glm::vec3(1.0f));
+        frameBuffer.drawWireframe(Shapes::instance().cube,   cubeModel, glm::vec3(1.0f));
 
         Renderer::instance().render();
 

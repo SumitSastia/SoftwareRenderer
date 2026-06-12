@@ -100,12 +100,12 @@ void FrameBuffer::drawLine(glm::vec2 a, glm::vec2 b, const glm::vec3 color) {
     float dx = b.x - a.x;
     float dy = b.y - a.y;
     
-    float steps = std::max(abs(dx), abs(dy));
+    float steps = std::max(std::abs(dx), std::abs(dy));
 
     dx /= steps;
     dy /= steps;
 
-    for (uint16_t i = 0; i < steps; i++) {
+    for (float i = 0; i < steps; i++) {
 
         setPixel(a.x, a.y, color);
 
@@ -114,7 +114,54 @@ void FrameBuffer::drawLine(glm::vec2 a, glm::vec2 b, const glm::vec3 color) {
     }
 }
 
-void FrameBuffer::drawTriangle(const Triangle2D& triangle, const glm::vec3& color) {
+void FrameBuffer::drawLine(glm::vec4 a, glm::vec4 b, const glm::vec3 color) {
+
+    // Range conversion: [-1, 1] -> [0, 1]
+    a = a * 0.5f + 0.5f;
+    b = b * 0.5f + 0.5f;
+
+    a.x *= WIN_W;
+    b.x *= WIN_W;
+
+    a.y *= WIN_H;
+    b.y *= WIN_H;
+    
+    float dx = b.x - a.x;
+    float dy = b.y - a.y;
+    float dz = b.z - a.z;
+    
+    float steps = std::max(std::abs(dx), std::abs(dy));
+
+    dx /= steps;
+    dy /= steps;
+    dz /= steps;
+
+    for (float i = 0; i < steps; i++) {
+
+        if (setDepth(a.x, a.y, a.z)) {
+            setPixel(a.x, a.y, color);
+        }
+
+        a.x += dx;
+        a.y += dy;
+        a.z += dz;
+    }
+}
+
+void FrameBuffer::drawWireframe(const Triangle2D& triangle, const glm::vec3& color) {
+
+    drawLine(triangle.v0, triangle.v1, color);
+    drawLine(triangle.v1, triangle.v2, color);
+    drawLine(triangle.v2, triangle.v0, color);
+}
+
+void FrameBuffer::drawWireframe(const Triangle& triangle, const glm::vec3& color) {
+
+    if (
+        triangle.v0.w <=0 ||
+        triangle.v1.w <=0 ||
+        triangle.v2.w <=0
+    ) return;
 
     drawLine(triangle.v0, triangle.v1, color);
     drawLine(triangle.v1, triangle.v2, color);
@@ -321,5 +368,12 @@ void FrameBuffer::draw(const Shape& shape, const glm::mat4& model, const glm::ve
 
     for (const Triangle& triangle : shape.triangles) {
         draw(triangle.transform(model), color);
+    }
+}
+
+void FrameBuffer::drawWireframe(const Shape& shape, const glm::mat4& model, const glm::vec3 color) {
+
+    for (const Triangle& triangle : shape.triangles) {
+        drawWireframe(triangle.transform(model), color);
     }
 }

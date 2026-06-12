@@ -35,9 +35,11 @@ public:
 
     // Geometry
     void drawLine(glm::vec2 a, glm::vec2 b, const glm::vec3 color);
+    void drawLine(glm::vec4 a, glm::vec4 b, const glm::vec3 color);
 
     // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
-    void drawTriangle(const Triangle2D& triangle, const glm::vec3& color);
+    void drawWireframe(const Triangle2D& triangle, const glm::vec3& color);
+    void drawWireframe(const Triangle& triangle, const glm::vec3& color);
 
     // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
     void fillTriangle(const Triangle2D& triangle, const glm::vec3& color);
@@ -51,4 +53,5 @@ public:
 
     void draw(const Shape& shape, const glm::vec3 color);
     void draw(const Shape& shape, const glm::mat4& model, const glm::vec3 color);
+    void drawWireframe(const Shape& shape, const glm::mat4& model, const glm::vec3 color);
 };
