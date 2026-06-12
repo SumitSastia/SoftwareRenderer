@@ -84,6 +84,12 @@ int main() {
 
     // frameBuffer.gradientTriangle(t1, glm::vec3(1.0f));
     // frameBuffer.gradientTriangle(t2, glm::vec3(1.0f));
+
+    glm::mat4 squareModel (1.0f);
+    squareModel = glm::scale(squareModel, glm::vec3(1.0f, 0.7f, 0.2f));
+
+    glm::mat4 cubeModel (1.0f);
+    cubeModel = glm::translate(cubeModel, glm::vec3(-3.0f, 0.0f, 1.0f));
     
     bool isRunning = true;
     float deltaTime, currentTime = 0.0f, lastTime = 0.0f;
@@ -115,9 +121,8 @@ int main() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         frameBuffer.clear();
-
-        // frameBuffer.gradientTriangle(t2, glm::vec3(1.0f));
-        frameBuffer.draw(t3, glm::vec3(1.0f));
+        frameBuffer.draw(Shapes::instance().square, squareModel, glm::vec3(1.0f));
+        frameBuffer.draw(Shapes::instance().cube,   cubeModel, glm::vec3(1.0f, 0.5f, 0.8f));
 
         Renderer::instance().render();
 

@@ -241,17 +241,15 @@ void FrameBuffer::gradientTriangle(const Triangle2D& triangle, const glm::vec3& 
 
 void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
 
-    const Triangle tri = triangle.transform();
-
     if (
-        tri.v0.w <=0 ||
-        tri.v1.w <=0 ||
-        tri.v2.w <=0
+        triangle.v0.w <=0 ||
+        triangle.v1.w <=0 ||
+        triangle.v2.w <=0
     ) return;
 
-    glm::vec3 v0 = tri.v0;
-    glm::vec3 v1 = tri.v1;
-    glm::vec3 v2 = tri.v2;
+    glm::vec3 v0 = triangle.v0;
+    glm::vec3 v1 = triangle.v1;
+    glm::vec3 v2 = triangle.v2;
 
     // Bounding Box
     float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
@@ -305,8 +303,23 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
                 if (setDepth(i, j, depth)) {
                     // setPixel(pixel, math::vec3(1.0f - depth));
                     setPixel(i, j, new_color);
+                    // setPixel(i, j, color);
                 }
             }
         }
+    }
+}
+
+void FrameBuffer::draw(const Shape& shape, const glm::vec3 color) {
+
+    for (const Triangle& triangle : shape.triangles) {
+        draw(triangle.transform(), color);
+    }
+}
+
+void FrameBuffer::draw(const Shape& shape, const glm::mat4& model, const glm::vec3 color) {
+
+    for (const Triangle& triangle : shape.triangles) {
+        draw(triangle.transform(model), color);
     }
 }

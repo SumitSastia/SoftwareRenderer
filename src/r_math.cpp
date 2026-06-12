@@ -20,9 +20,9 @@ Triangle2D Triangle2D::transform() const {
     return Triangle2D { nv0, nv1, nv2 };
 }
 
-Triangle Triangle::transform() const {
+Triangle Triangle::transform(const glm::mat4& model) const {
 
-    const glm::mat4 mvp = Camera::instance().getPerspective() * Camera::instance().getView() * glm::mat4(1.0f);
+    const glm::mat4 mvp = Camera::instance().getPerspective() * Camera::instance().getView() * model;
 
     glm::vec4 gl_Pos0 = mvp * glm::vec4(v0.x, v0.y, v0.z, 1.0f);
     glm::vec4 gl_Pos1 = mvp * glm::vec4(v1.x, v1.y, v1.z, 1.0f);
@@ -41,4 +41,97 @@ Triangle Triangle::transform() const {
     gl_Pos2.z /= gl_Pos2.w;
 
     return Triangle { gl_Pos0, gl_Pos1, gl_Pos2 };
+}
+
+Shapes::Shapes() {
+
+    square.triangles = {
+        
+        Triangle {
+            glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f),
+            glm::vec4( 1.0f, 1.0f, 0.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f, 0.0f, 1.0f)
+        },
+        Triangle {
+            glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f, 0.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f, 0.0f, 1.0f)
+        }
+    };
+
+    cube.triangles = {
+
+        // Front
+        Triangle {
+            glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f),
+            glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f, 1.0f, 1.0f)
+        },
+        Triangle {
+            glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f, 1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f, 1.0f, 1.0f)
+        },
+
+        // Back
+        Triangle {
+            glm::vec4( 1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f,-1.0f, 1.0f)
+        },
+        Triangle {
+            glm::vec4( 1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f,-1.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f,-1.0f, 1.0f)
+        },
+
+        // Left
+        Triangle {
+            glm::vec4(-1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f, 1.0f, 1.0f)
+        },
+        Triangle {
+            glm::vec4(-1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f, 1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f,-1.0f, 1.0f)
+        },
+
+        // Right
+        Triangle {
+            glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f),
+            glm::vec4( 1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f,-1.0f, 1.0f)
+        },
+        Triangle {
+            glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f,-1.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f, 1.0f, 1.0f)
+        },
+
+        // Top
+        Triangle {
+            glm::vec4(-1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4( 1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f)
+        },
+        Triangle {
+            glm::vec4(-1.0f, 1.0f,-1.0f, 1.0f),
+            glm::vec4( 1.0f, 1.0f, 1.0f, 1.0f),
+            glm::vec4(-1.0f, 1.0f, 1.0f, 1.0f)
+        },
+
+        // Down
+        Triangle {
+            glm::vec4( 1.0f,-1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f, 1.0f, 1.0f)
+        },
+        Triangle {
+            glm::vec4( 1.0f,-1.0f,-1.0f, 1.0f),
+            glm::vec4(-1.0f,-1.0f, 1.0f, 1.0f),
+            glm::vec4( 1.0f,-1.0f, 1.0f, 1.0f)
+        }
+    };
+
 }

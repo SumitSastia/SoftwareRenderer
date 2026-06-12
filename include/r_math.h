@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <vector>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -22,5 +23,22 @@ struct Triangle {
     glm::vec4 v1;
     glm::vec4 v2;
 
-    Triangle transform() const;
+    Triangle transform(const glm::mat4& model = glm::mat4(1.0f)) const;
+};
+
+struct Shape {
+
+    std::vector <Triangle> triangles;
+};  
+
+struct Shapes {
+
+    Shape square;
+    Shape cube;
+
+    Shapes();
+    static Shapes& instance() {
+        static Shapes instance {};
+        return instance;
+    }
 };

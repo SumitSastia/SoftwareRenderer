@@ -48,4 +48,7 @@ public:
     // 3D Geometry
     // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
     void draw(const Triangle& triangle, const glm::vec3 color);
+
+    void draw(const Shape& shape, const glm::vec3 color);
+    void draw(const Shape& shape, const glm::mat4& model, const glm::vec3 color);
 };
