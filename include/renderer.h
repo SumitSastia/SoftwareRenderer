@@ -63,6 +63,8 @@ public:
     void render() const;
     void terminate();
 
+    void cullBackFace(const bool cull);
+
     // Triggers the instance
     void trigger() {}
 

@@ -1,9 +1,10 @@
 #include <frame.h>
 #include <renderer.h>
 #include <camera.h>
+#include <iostream>
 
 FrameBuffer::FrameBuffer(const uint16_t width, const uint16_t height):
-    width(width), height(height)
+    width(width), height(height), cullBackFace(true)
 {
     colorBuffer = new uint32_t[width * height];
     depthBuffer = new float[width * height];
@@ -30,8 +31,6 @@ void FrameBuffer::update() {
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, colorBuffer);
 }
 
-#include <iostream>
-
 uint32_t FrameBuffer::RGB_to_HEX(const glm::vec3 color) const {
 
     uint8_t r = static_cast<uint8_t>(color.r * 255.0f);
@@ -52,6 +51,15 @@ void FrameBuffer::setPixel(const float x, const float y, const glm::vec3 color) 
 
     uint32_t index = static_cast<uint16_t>(y) * width + static_cast<uint16_t>(x);
     colorBuffer[index] = RGB_to_HEX(color);
+}
+
+void FrameBuffer::setPixel(const float x, const float y, const uint32_t color) {
+
+    if (x < 0 || x > WIN_W) return;
+    if (y < 0 || y > WIN_H) return;
+
+    uint32_t index = static_cast<uint16_t>(y) * width + static_cast<uint16_t>(x);
+    colorBuffer[index] = color;
 }
 
 bool FrameBuffer::setDepth(const float x, const float y, const float depth) {
@@ -158,9 +166,9 @@ void FrameBuffer::drawWireframe(const Triangle2D& triangle, const glm::vec3& col
 void FrameBuffer::drawWireframe(const Triangle& triangle, const glm::vec3& color) {
 
     if (
-        triangle.v0.w <=0 ||
-        triangle.v1.w <=0 ||
-        triangle.v2.w <=0
+        triangle.v0.vertex.w <=0 ||
+        triangle.v1.vertex.w <=0 ||
+        triangle.v2.vertex.w <=0
     ) return;
 
     drawLine(triangle.v0, triangle.v1, color);
@@ -286,17 +294,17 @@ void FrameBuffer::gradientTriangle(const Triangle2D& triangle, const glm::vec3& 
     }
 }
 
-void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
+void FrameBuffer::draw(const Triangle& triangle, const glm::vec3& color) {
 
     if (
-        triangle.v0.w <=0 ||
-        triangle.v1.w <=0 ||
-        triangle.v2.w <=0
+        triangle.v0.vertex.w <=0 ||
+        triangle.v1.vertex.w <=0 ||
+        triangle.v2.vertex.w <=0
     ) return;
 
-    glm::vec3 v0 = triangle.v0;
-    glm::vec3 v1 = triangle.v1;
-    glm::vec3 v2 = triangle.v2;
+    glm::vec3 v0 = triangle.v0.vertex;
+    glm::vec3 v1 = triangle.v1.vertex;
+    glm::vec3 v2 = triangle.v2.vertex;
 
     // Bounding Box
     float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
@@ -315,6 +323,9 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
     v1 = convertRange(v1);
     v2 = convertRange(v2);
 
+    float area = checkEdge(v0, v1, v2);
+    if (cullBackFace && area <= 0) return;
+
     for (float i = minX; i <= maxX; i++) {
         for (float j = minY; j <= maxY; j++) {
 
@@ -329,8 +340,7 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
                  checkEdge(v2, v0, pixel) <= 0)
             ) {
                 // Gradient Triangle
-                float area = checkEdge(v0, v1, v2);
-
+            
                 float alpha = checkEdge(v1, v2, pixel) / area;
                 float beta  = checkEdge(v2, v0, pixel) / area;
                 float gamma = checkEdge(v0, v1, pixel) / area;
@@ -342,9 +352,9 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
                 };
 
                 float depth = {
-                    alpha * triangle.v0.z +
-                    beta  * triangle.v1.z +
-                    gamma * triangle.v2.z 
+                    alpha * triangle.v0.vertex.z +
+                    beta  * triangle.v1.vertex.z +
+                    gamma * triangle.v2.vertex.z 
                 };
 
                 if (setDepth(i, j, depth)) {
@@ -357,23 +367,109 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3 color) {
     }
 }
 
-void FrameBuffer::draw(const Shape& shape, const glm::vec3 color) {
+void FrameBuffer::draw(const Shape& shape, const glm::vec3& color) {
 
     for (const Triangle& triangle : shape.triangles) {
         draw(triangle.transform(), color);
     }
 }
 
-void FrameBuffer::draw(const Shape& shape, const glm::mat4& model, const glm::vec3 color) {
+void FrameBuffer::draw(const Shape& shape, const glm::mat4& model, const glm::vec3& color) {
 
     for (const Triangle& triangle : shape.triangles) {
         draw(triangle.transform(model), color);
     }
 }
 
-void FrameBuffer::drawWireframe(const Shape& shape, const glm::mat4& model, const glm::vec3 color) {
+void FrameBuffer::drawWireframe(const Shape& shape, const glm::mat4& model, const glm::vec3& color) {
 
     for (const Triangle& triangle : shape.triangles) {
         drawWireframe(triangle.transform(model), color);
+    }
+}
+
+void FrameBuffer::drawTexture(const Triangle& triangle, const Texture& texture) {
+
+    if (
+        triangle.v0.vertex.w <=0 ||
+        triangle.v1.vertex.w <=0 ||
+        triangle.v2.vertex.w <=0
+    ) return;
+
+    glm::vec3 v0 = triangle.v0.vertex;
+    glm::vec3 v1 = triangle.v1.vertex;
+    glm::vec3 v2 = triangle.v2.vertex;
+
+    glm::vec2 uv0 = triangle.v0.uv;
+    glm::vec2 uv1 = triangle.v1.uv;
+    glm::vec2 uv2 = triangle.v2.uv;
+
+    // Bounding Box
+    float minX = (std::min(std::min(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+    float maxX = (std::max(std::max(v0.x, v1.x), v2.x) * 0.5 + 0.5) * WIN_W;
+
+    float minY = (std::min(std::min(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+    float maxY = (std::max(std::max(v0.y, v1.y), v2.y) * 0.5 + 0.5) * WIN_H;
+
+    if (minX < 0.0f) minX = 0.0f;
+    if (minY < 0.0f) minY = 0.0f;
+
+    if (maxX > WIN_W) maxX = WIN_W;
+    if (maxY > WIN_H) maxY = WIN_H;
+
+    v0 = convertRange(v0);
+    v1 = convertRange(v1);
+    v2 = convertRange(v2);
+
+    float area = checkEdge(v0, v1, v2);
+    if (cullBackFace && area <= 0) return;
+
+    for (float i = minX; i <= maxX; i++) {
+        for (float j = minY; j <= maxY; j++) {
+
+            const glm::vec2 pixel(i, j);
+
+            if (
+                (checkEdge(v0, v1, pixel) >= 0  &&
+                 checkEdge(v1, v2, pixel) >= 0  &&
+                 checkEdge(v2, v0, pixel) >= 0) ||
+                (checkEdge(v0, v1, pixel) <= 0  &&
+                 checkEdge(v1, v2, pixel) <= 0  &&
+                 checkEdge(v2, v0, pixel) <= 0)
+            ) {
+                // Gradient Triangle
+            
+                float alpha = checkEdge(v1, v2, pixel) / area;
+                float beta  = checkEdge(v2, v0, pixel) / area;
+                float gamma = checkEdge(v0, v1, pixel) / area;
+
+                glm::vec2 uv = {
+                    alpha * uv0 +
+                    beta  * uv1 +
+                    gamma * uv2
+                };
+
+                const uint32_t new_color = texture.sample(uv.x, uv.y);
+
+                float depth = {
+                    alpha * triangle.v0.vertex.z +
+                    beta  * triangle.v1.vertex.z +
+                    gamma * triangle.v2.vertex.z 
+                };
+
+                if (setDepth(i, j, depth)) {
+                    // setPixel(pixel, math::vec3(1.0f - depth));
+                    setPixel(i, j, new_color);
+                    // setPixel(i, j, glm::vec3(1.0f));
+                }
+            }
+        }
+    }
+}
+
+void FrameBuffer::drawTexture(const Shape& shape, const glm::mat4& model, const Texture& texture) {
+
+    for (const Triangle& triangle : shape.triangles) {
+        drawTexture(triangle.transform(model), texture);
     }
 }

@@ -24,9 +24,9 @@ Triangle Triangle::transform(const glm::mat4& model) const {
 
     const glm::mat4 mvp = Camera::instance().getPerspective() * Camera::instance().getView() * model;
 
-    glm::vec4 gl_Pos0 = mvp * glm::vec4(v0.x, v0.y, v0.z, 1.0f);
-    glm::vec4 gl_Pos1 = mvp * glm::vec4(v1.x, v1.y, v1.z, 1.0f);
-    glm::vec4 gl_Pos2 = mvp * glm::vec4(v2.x, v2.y, v2.z, 1.0f);
+    glm::vec4 gl_Pos0 = mvp * glm::vec4(v0.vertex.x, v0.vertex.y, v0.vertex.z, 1.0f);
+    glm::vec4 gl_Pos1 = mvp * glm::vec4(v1.vertex.x, v1.vertex.y, v1.vertex.z, 1.0f);
+    glm::vec4 gl_Pos2 = mvp * glm::vec4(v2.vertex.x, v2.vertex.y, v2.vertex.z, 1.0f);
 
     gl_Pos0.x /= gl_Pos0.w;
     gl_Pos1.x /= gl_Pos1.w;
@@ -40,7 +40,11 @@ Triangle Triangle::transform(const glm::mat4& model) const {
     gl_Pos1.z /= gl_Pos1.w;
     gl_Pos2.z /= gl_Pos2.w;
 
-    return Triangle { gl_Pos0, gl_Pos1, gl_Pos2 };
+    return Triangle {
+        Vertex { gl_Pos0, v0.uv },
+        Vertex { gl_Pos1, v1.uv },
+        Vertex { gl_Pos2, v2.uv }
+    };
 }
 
 Shapes::Shapes() {
@@ -48,14 +52,14 @@ Shapes::Shapes() {
     square.triangles = {
         
         Triangle {
-            glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f),
-            glm::vec4( 1.0f, 1.0f, 0.0f, 1.0f),
-            glm::vec4( 1.0f,-1.0f, 0.0f, 1.0f)
+            Vertex { glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f) },
+            Vertex { glm::vec4( 1.0f, 1.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f) },
+            Vertex { glm::vec4( 1.0f,-1.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f) }
         },
         Triangle {
-            glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f),
-            glm::vec4( 1.0f,-1.0f, 0.0f, 1.0f),
-            glm::vec4(-1.0f,-1.0f, 0.0f, 1.0f)
+            Vertex { glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f) },
+            Vertex { glm::vec4( 1.0f,-1.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f) },
+            Vertex { glm::vec4(-1.0f,-1.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f) }
         }
     };
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <r_math.h>
+#include <texture.h>
 
 class FrameBuffer {
 
@@ -15,6 +16,8 @@ class FrameBuffer {
     float checkEdge(const glm::vec2& a, const glm::vec2& b, const glm::vec2& pixel);
     
 public:
+
+    bool cullBackFace;
     
     FrameBuffer(const uint16_t width, const uint16_t height);
 
@@ -27,6 +30,8 @@ public:
     // bool setDepth(const u_int16_t x, const uint16_t y, const float depth);
 
     void setPixel(const float x, const float y, const glm::vec3 color);
+    void setPixel(const float x, const float y, const uint32_t  color);
+
     bool setDepth(const float x, const float y, const float depth);
 
     void clear(const glm::vec3 color = glm::vec3(0.0f));
@@ -41,6 +46,8 @@ public:
     void drawWireframe(const Triangle2D& triangle, const glm::vec3& color);
     void drawWireframe(const Triangle& triangle, const glm::vec3& color);
 
+    void drawTexture(const Triangle& triangle, const Texture& texture);
+
     // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
     void fillTriangle(const Triangle2D& triangle, const glm::vec3& color);
 
@@ -49,9 +56,10 @@ public:
 
     // 3D Geometry
     // @param triangle 3x glm::vec3 in Normalized Device Coordinates.
-    void draw(const Triangle& triangle, const glm::vec3 color);
-
-    void draw(const Shape& shape, const glm::vec3 color);
-    void draw(const Shape& shape, const glm::mat4& model, const glm::vec3 color);
-    void drawWireframe(const Shape& shape, const glm::mat4& model, const glm::vec3 color);
+    void draw(const Triangle& triangle, const glm::vec3& color);
+    
+    void draw(const Shape& shape, const glm::vec3& color);
+    void draw(const Shape& shape, const glm::mat4& model, const glm::vec3& color);
+    void drawWireframe(const Shape& shape, const glm::mat4& model, const glm::vec3& color);
+    void drawTexture(const Shape& shape, const glm::mat4& model, const Texture& texture);
 };

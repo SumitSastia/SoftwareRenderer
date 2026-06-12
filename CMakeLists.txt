@@ -25,6 +25,7 @@ add_executable(${TARGET_NAME}
     src/frame.cpp
     src/input.cpp
     src/camera.cpp
+    src/texture.cpp
 )
 
 target_include_directories(${TARGET_NAME} PRIVATE include)

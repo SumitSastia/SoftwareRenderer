@@ -203,3 +203,7 @@ void Renderer::render() const {
 void Renderer::terminate() {
     glfwDestroyWindow(window);
 }
+
+void Renderer::cullBackFace(const bool cull) {
+    frameBuffer->cullBackFace = cull;
+}
