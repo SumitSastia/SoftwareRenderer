@@ -22,6 +22,8 @@ struct Vertex {
     glm::vec4 vertex;
     glm::vec2 uv;
 
+    Vertex() = default;
+
     Vertex(const glm::vec4& vertex):
         vertex(vertex), uv(glm::vec2(1.0f)) {
     }
@@ -45,6 +47,10 @@ struct Triangle {
 struct Shape {
 
     std::vector <Triangle> triangles;
+    
+    Vertex intersect(const Vertex& a, const Vertex& b) const;
+    std::vector <Triangle> transform(const glm::mat4& model = glm::mat4(1.0f)) const;
+    
 };  
 
 struct Shapes {

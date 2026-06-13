@@ -26,9 +26,6 @@ public:
 
     void update();
 
-    // void setPixel(const u_int16_t x, const uint16_t y, const glm::vec3 color);
-    // bool setDepth(const u_int16_t x, const uint16_t y, const float depth);
-
     void setPixel(const float x, const float y, const glm::vec3 color);
     void setPixel(const float x, const float y, const uint32_t  color);
 

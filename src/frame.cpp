@@ -296,12 +296,6 @@ void FrameBuffer::gradientTriangle(const Triangle2D& triangle, const glm::vec3& 
 
 void FrameBuffer::draw(const Triangle& triangle, const glm::vec3& color) {
 
-    if (
-        triangle.v0.vertex.w <=0 ||
-        triangle.v1.vertex.w <=0 ||
-        triangle.v2.vertex.w <=0
-    ) return;
-
     glm::vec3 v0 = triangle.v0.vertex;
     glm::vec3 v1 = triangle.v1.vertex;
     glm::vec3 v2 = triangle.v2.vertex;
@@ -358,7 +352,7 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3& color) {
                 };
 
                 if (setDepth(i, j, depth)) {
-                    // setPixel(pixel, math::vec3(1.0f - depth));
+                    // setPixel(i, j, glm::vec3(1.0f - depth));
                     setPixel(i, j, new_color);
                     // setPixel(i, j, color);
                 }
@@ -369,32 +363,32 @@ void FrameBuffer::draw(const Triangle& triangle, const glm::vec3& color) {
 
 void FrameBuffer::draw(const Shape& shape, const glm::vec3& color) {
 
-    for (const Triangle& triangle : shape.triangles) {
-        draw(triangle.transform(), color);
+    const std::vector <Triangle> triangles = shape.transform();
+
+    for (const Triangle& triangle : triangles) {
+        draw(triangle, color);
     }
 }
 
 void FrameBuffer::draw(const Shape& shape, const glm::mat4& model, const glm::vec3& color) {
 
-    for (const Triangle& triangle : shape.triangles) {
-        draw(triangle.transform(model), color);
+    const std::vector <Triangle> triangles = shape.transform(model);
+
+    for (const Triangle& triangle : triangles) {
+        draw(triangle, color);
     }
 }
 
 void FrameBuffer::drawWireframe(const Shape& shape, const glm::mat4& model, const glm::vec3& color) {
 
-    for (const Triangle& triangle : shape.triangles) {
-        drawWireframe(triangle.transform(model), color);
+    const std::vector <Triangle> triangles = shape.transform(model);
+
+    for (const Triangle& triangle : triangles) {
+        drawWireframe(triangle, color);
     }
 }
 
 void FrameBuffer::drawTexture(const Triangle& triangle, const Texture& texture) {
-
-    if (
-        triangle.v0.vertex.w <=0 ||
-        triangle.v1.vertex.w <=0 ||
-        triangle.v2.vertex.w <=0
-    ) return;
 
     glm::vec3 v0 = triangle.v0.vertex;
     glm::vec3 v1 = triangle.v1.vertex;
@@ -443,13 +437,31 @@ void FrameBuffer::drawTexture(const Triangle& triangle, const Texture& texture) 
                 float beta  = checkEdge(v2, v0, pixel) / area;
                 float gamma = checkEdge(v0, v1, pixel) / area;
 
-                glm::vec2 uv = {
-                    alpha * uv0 +
-                    beta  * uv1 +
-                    gamma * uv2
+                // glm::vec2 uv = {
+                //     alpha * uv0 +
+                //     beta  * uv1 +
+                //     gamma * uv2
+                // };
+
+                float uow = {
+                    alpha * uv0.x / triangle.v0.vertex.w +
+                    beta  * uv1.x / triangle.v1.vertex.w +
+                    gamma * uv2.x / triangle.v2.vertex.w
                 };
 
-                const uint32_t new_color = texture.sample(uv.x, uv.y);
+                float vow = {
+                    alpha * uv0.y / triangle.v0.vertex.w +
+                    beta  * uv1.y / triangle.v1.vertex.w +
+                    gamma * uv2.y / triangle.v2.vertex.w
+                };
+
+                float oow = {
+                    alpha / triangle.v0.vertex.w +
+                    beta  / triangle.v1.vertex.w +
+                    gamma / triangle.v2.vertex.w
+                };
+
+                const uint32_t new_color = texture.sample(uow / oow, vow / oow);
 
                 float depth = {
                     alpha * triangle.v0.vertex.z +
@@ -469,7 +481,9 @@ void FrameBuffer::drawTexture(const Triangle& triangle, const Texture& texture) 
 
 void FrameBuffer::drawTexture(const Shape& shape, const glm::mat4& model, const Texture& texture) {
 
-    for (const Triangle& triangle : shape.triangles) {
-        drawTexture(triangle.transform(model), texture);
+    const std::vector <Triangle> triangles = shape.transform(model);
+
+    for (const Triangle& triangle : triangles) {
+        drawTexture(triangle, texture);
     }
 }

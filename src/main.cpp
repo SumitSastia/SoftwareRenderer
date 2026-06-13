@@ -13,6 +13,8 @@ int main() {
     GLFWwindow* window = Renderer::instance().getWindow();
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+    Renderer::instance().cullBackFace(false);
+
     Input::init();
     glfwSetKeyCallback(window, Input::key_callback);
 
@@ -27,8 +29,16 @@ int main() {
 
     // ------------------------------------------------------------- //
 
+    // Light Sources
+    glm::vec3 lightPos1 (3.0f, 1.5f, -3.0f);
+    glm::vec3 lightPos2 (-3.0f, 0.0f, 4.0f);
+
+    glm::vec3 lightColor1 (colors::ORANGE);
+    glm::vec3 lightColor2 (colors::GREEN);
+
     glm::mat4 squareModel (1.0f);
     // squareModel = glm::scale(squareModel, glm::vec3(1.0f, 0.7f, 0.2f));
+    // squareModel = glm::rotate(squareModel, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 cubeModel (1.0f);
     cubeModel = glm::translate(cubeModel, glm::vec3(-3.0f, 0.0f, 1.0f));
